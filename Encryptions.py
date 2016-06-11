@@ -5,6 +5,7 @@
 import string, re
 from collections import OrderedDict
 from random import shuffle
+from copy import copy
 
 def caesar(plaintext, shift):
     '''
@@ -133,4 +134,153 @@ def one_time_pad(plaintext, pad):
 
 print 'One time pad: ' + one_time_pad('abcde', 'qwert')
 
-#TODO: enigma, gpg
+
+class Enigma(object):
+
+    def __init__(self):
+        '''
+        Set up three rotors of different type and a reflector
+        '''
+        self.rotor_1 = Rotor(1)
+        self.rotor_2 = Rotor(2)
+        self.rotor_3 = Rotor(3)
+        self.reflector = Reflector()
+        #print self.rotor_1.rotor
+        #print self.rotor_2.rotor
+        #print self.rotor_3.rotor
+
+    def encode(self, plaintext):
+        '''
+        Encoding is the same as decoding due to the reflector.
+        The enigma is a polyalphabetic encryption.
+        '''
+        # turn all text to lowercase
+        plaintext = string.lower(plaintext)
+        alphabet = string.ascii_lowercase
+
+        # encrypt plaintext
+        cyphertext = ''
+        for letter_msg_ix in xrange(len(plaintext)):
+            letter_num = alphabet.index(plaintext[letter_msg_ix])
+            letter_num = self.rotor_1.encode_forward(letter_num)
+            letter_num = self.rotor_2.encode_forward(letter_num)
+            letter_num = self.rotor_3.encode_forward(letter_num)
+            letter_num = self.reflector.reflect(letter_num)
+            letter_num = self.rotor_3.encode_backward(letter_num)
+            letter_num = self.rotor_2.encode_backward(letter_num)
+            letter_num = self.rotor_1.encode_backward(letter_num)
+            self.rotor_1.turn(letter_msg_ix)
+            self.rotor_2.turn(letter_msg_ix)
+            self.rotor_3.turn(letter_msg_ix)
+            cyphertext += alphabet[letter_num]
+        return cyphertext
+
+    def reset(self):
+        '''
+        Reset machine to initial state
+        (e.g. needed to decode)
+        '''
+        self.rotor_1.reset()
+        self.rotor_2.reset()
+        self.rotor_3.reset()
+
+class Reflector(object):
+    '''
+    The special reflector rotor which maps pairs of letters and never turns
+    '''
+
+    def __init__(self):
+        '''
+        To make a symmetric mapping between number pairs we create a randomized
+        list and take a reversed copy. Doing so is a bit ugly due to the fact
+        that neither shuffle nor reverse return the object, but work inplace.
+        '''
+        dummy = range(26)
+        shuffle(dummy)
+        self.rotor = copy(dummy)
+        dummy.reverse()
+        self.rotor_2 = dummy
+        #print self.rotor
+        #print self.rotor_2
+
+    def reflect(self, letter_num):
+        '''
+        @param int letter_num: numeric representation of the letter to be
+            encoded.
+        '''
+        return self.rotor_2[self.rotor.index(letter_num)]
+
+class Rotor(object):
+    '''
+    Contains a list of random numbers [1:26] which is used to map an input
+    letter (coded as number) to an output letter (coded as number). Also
+    rotates with different frequency based on the type.
+    '''
+
+    def __init__(self, rotor_type):
+        '''
+        @param int rotor_type: Type 1 rotates after every encoding, type 2
+            rotates after a full rotation of th e type 1 rotor (26 turns) and
+            so on.
+        '''
+        self.rotor = range(26)
+        shuffle(self.rotor)
+        self.state = 0
+        self.rotor_type = rotor_type
+
+    def encode_forward(self, letter_num):
+        '''
+        The initial way of a letter through the rotor
+        @param int letter_num: numeric representation of the letter to be
+            encoded.
+        '''
+        output_letter_num = self.rotor[(letter_num + self.state)%26]
+        return output_letter_num
+
+    def encode_backward(self, letter_num):
+        '''
+        The way back through the rotor after the reflector.
+        NOTE: Encode backwards does not mean decoding! Decoding is achieved
+        by setting Enigma to the same initial state and just retyping the
+        cyphertext.
+        @param int letter_num: numeric representation of the letter to be
+            encoded.
+        '''
+        output_letter_num = (self.rotor.index(letter_num)-self.state)%26
+        return output_letter_num
+
+    def turn(self, turn_counter):
+        '''
+        Method to decide if turning of the rotor is necessary
+        @param in turn_counter: indicates whether the rotor turns and changes
+            it's state
+        '''
+        if self.rotor_type == 1:
+            self.state += 1
+            #print 'Rotor 1 turn'
+        elif self.rotor_type == 2 and turn_counter != 0:
+            if turn_counter % 26 == 0:
+                self.state += 1
+                #print 'Rotor 2 turn'
+        elif self.rotor_type == 3 and turn_counter != 0:
+            if turn_counter % 676 == 0:
+                self.state += 1
+                #print 'Rotor 3 turn'
+
+    def reset(self):
+        '''
+        Reset rotor to initial state
+        '''
+        self.state = 0
+
+print 'Enigma:'
+test = Enigma()
+text = string.ascii_lowercase + string.ascii_lowercase
+print 'Plaintext: ' + text
+cypher = test.encode(text)
+print 'Encrypted: ' + cypher
+test.reset()
+decode = test.encode(cypher)
+print 'Decrypted: ' + decode
+
+#TODO: gpg, make it so spaces are included
