@@ -10,20 +10,16 @@ def caesar(plaintext, shift):
     '''
     Simple caesar encryption without key
     '''
+    # turn all text to lowercase
     plaintext = string.lower(plaintext)
-    plaintext_alphabet = string.ascii_lowercase
-    cyphertext_alphabet = string.ascii_lowercase
-    cyphertext_alphabet = cyphertext_alphabet[shift:] + cyphertext_alphabet[0:shift]
-
-    # create conversion dictionary
-    conversion_dict = {}
-    for letter_ix in xrange(len(plaintext_alphabet)):
-        conversion_dict[plaintext_alphabet[letter_ix]] = cyphertext_alphabet[letter_ix]
-    cyphertext = ''
+    alphabet = string.ascii_lowercase
 
     # encrypt plaintext
+    cyphertext = ''
     for letter in plaintext:
-        cyphertext += conversion_dict[letter]
+        letter_ix = alphabet.index(letter)
+        cyphertext += alphabet[(shift + letter_ix) % 26]
+
     return cyphertext
 
 print 'abcde'
@@ -34,28 +30,26 @@ def caesar_key(plaintext, shift, key):
     '''
     Caesar encryption with key
     '''
+    # turn all text to lowercase
     plaintext = string.lower(plaintext)
     key = string.lower(key)
     plaintext_alphabet = string.ascii_lowercase
-    cyphertext_alphabet = string.ascii_lowercase
 
     # get unique letters from key
     key = ''.join(OrderedDict.fromkeys(key).keys())
+    # create cyphertext alphabet
+    cyphertext_alphabet = string.ascii_lowercase
     cyphertext_alphabet = key + re.sub('[' + key + ']', '', cyphertext_alphabet)
-    cyphertext_alphabet = cyphertext_alphabet[shift:] + cyphertext_alphabet[0:shift]
-
-    # create conversion dictionary
-    conversion_dict = {}
-    for letter_ix in xrange(len(plaintext_alphabet)):
-        conversion_dict[plaintext_alphabet[letter_ix]] = cyphertext_alphabet[letter_ix]
-    cyphertext = ''
 
     # encrypt plaintext
+    cyphertext = ''
     for letter in plaintext:
-        cyphertext += conversion_dict[letter]
+        letter_ix = plaintext_alphabet.index(letter)
+        cyphertext += cyphertext_alphabet[(shift + letter_ix) % 26]
+
     return cyphertext
 
-print 'Caesar with key: ' + caesar_key('abcde', 5, 'florian')
+print 'Caesar with key: ' + caesar_key('abcde', 5, 'florianf')
 
 
 def mono(plaintext, verbose=False):
@@ -63,23 +57,23 @@ def mono(plaintext, verbose=False):
     Simple monoalphabetic encryption
     :param boolean verbose: Print the cyphertext_alphabet
     '''
+    # turn all text to lowercase
     plaintext = string.lower(plaintext)
     plaintext_alphabet = string.ascii_lowercase
+
+    # create cyphertext alphabet
     cyphertext_alphabet = list(string.ascii_lowercase)
     shuffle(cyphertext_alphabet)
     cyphertext_alphabet = ''.join(cyphertext_alphabet)
     if verbose:
         print cyphertext_alphabet
 
-    # create conversion dictionary
-    conversion_dict = {}
-    for letter_ix in xrange(len(plaintext_alphabet)):
-        conversion_dict[plaintext_alphabet[letter_ix]] = cyphertext_alphabet[letter_ix]
+    ## encrypt plaintext
     cyphertext = ''
-
-    # encrypt plaintext
     for letter in plaintext:
-        cyphertext += conversion_dict[letter]
+        letter_ix = plaintext_alphabet.index(letter)
+        cyphertext += cyphertext_alphabet[(letter_ix) % 26]
+
     return cyphertext
 
 print 'Monoalphabetic: ' + mono('abcde')
@@ -110,5 +104,4 @@ def vigenere_key(plaintext, key, verbose=False):
 
 print 'Vigenere: ' + vigenere_key('abcde', 'florian')
 
-#TODO: make caesars as simple as vigenere
 #TODO: one-time pad and enigma
