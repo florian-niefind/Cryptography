@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Simple versions of ncryption algorithms described in 'Codes' by Simon Singh.
+# Simple versions of encryption algorithms described in 'Codes' by Simon Singh.
 # Everything works on lowercase ASCII only, it's just about the principles,
 # not about useable and user-friendly code.
 import string, re
@@ -22,7 +22,7 @@ def caesar(plaintext, shift):
 
     return cyphertext
 
-print 'abcde'
+print 'Plaintext: abcde'
 print 'Caesar w/o key: ' + caesar('abcde',5)
 
 
@@ -86,10 +86,12 @@ def vigenere_key(plaintext, key, verbose=False):
         as determined by the key) and the index of the plaintext letter to be
         encrypted in the alphabet.
     '''
+    # turn all text to lowercase
     plaintext = string.lower(plaintext)
     key = string.lower(key)
     alphabet = string.ascii_lowercase
 
+    # encrypt plaintext
     cyphertext = ''
     for letter_ix in xrange(len(plaintext)):
         offset_letter = key[letter_ix%len(key)]
@@ -104,4 +106,31 @@ def vigenere_key(plaintext, key, verbose=False):
 
 print 'Vigenere: ' + vigenere_key('abcde', 'florian')
 
-#TODO: one-time pad and enigma
+
+def one_time_pad(plaintext, pad):
+    '''
+    This function uses modular addition of letter indices
+    A possible TODO is to write a function that creates the pads too
+    @param string pad: the cypher pad to use for encryption
+    '''
+    if len(pad) < len(plaintext):
+        return("Pad is to short. Repeating the pad makes the encryption " +
+                    "breakable. Please choose a longer pad.")
+    else:
+        # turn all text to lowercase
+        plaintext = string.lower(plaintext)
+        pad = string.lower(pad)
+        alphabet = string.ascii_lowercase
+
+        # encrypt plaintext
+        cyphertext = ''
+        for letter_msg_ix in xrange(len(plaintext)):
+            letter_ix = alphabet.index(plaintext[letter_msg_ix])
+            pad_ix = alphabet.index(pad[letter_msg_ix])
+            cyphertext += alphabet[(pad_ix + letter_ix) % 26]
+
+        return cyphertext
+
+print 'One time pad: ' + one_time_pad('abcde', 'qwert')
+
+#TODO: enigma, gpg
